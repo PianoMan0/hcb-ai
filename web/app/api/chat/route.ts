@@ -16,7 +16,7 @@ function mustEnv(name: string, value: string | undefined) {
 async function callMcp(message: string, hcb_token?: string): Promise<string> {
   mustEnv('HCB_MCP_URL', HCB_MCP_URL);
 
-  const tokenToUse = (hcb_token && hcb_token.trim()) || (HCB_MCP_TOKEN && HCB_MCP_TOKEN.trim());
+  const tokenToUse = hcb_token && hcb_token.trim() ? hcb_token.trim() : undefined;
 
   const res = await fetch(HCB_MCP_URL!, {
     method: 'POST',
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   const hcb_token = (body.hcb_token || '').trim() || undefined;
 
   try {
-    const tokenUsed = (hcb_token && hcb_token.trim()) || HCB_MCP_TOKEN || undefined;
+    const tokenUsed = hcb_token && hcb_token.trim() ? true : !!(HCB_MCP_TOKEN && HCB_MCP_TOKEN.trim());
     const answer = await callMcp(message, hcb_token);
     return NextResponse.json({ answer, auth: { tokenUsedPresent: !!tokenUsed } });
   } catch (e) {
