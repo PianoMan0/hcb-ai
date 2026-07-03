@@ -16,11 +16,14 @@ function mustEnv(name: string, value: string | undefined) {
 async function callMcp(message: string, hcb_token?: string): Promise<string> {
   mustEnv('HCB_MCP_URL', HCB_MCP_URL);
 
+  // Prefer the per-request token (sent from the UI), but fall back to the env var.
+  const tokenToUse = (hcb_token && hcb_token.trim()) || HCB_MCP_TOKEN;
+
   const res = await fetch(HCB_MCP_URL!, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(HCB_MCP_TOKEN ? { Authorization: `Bearer ${HCB_MCP_TOKEN}` } : {})
+      ...(tokenToUse ? { Authorization: `Bearer ${tokenToUse}` } : {})
     },
     body: JSON.stringify({
       message
