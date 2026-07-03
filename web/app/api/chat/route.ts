@@ -16,8 +16,7 @@ function mustEnv(name: string, value: string | undefined) {
 async function callMcp(message: string, hcb_token?: string): Promise<string> {
   mustEnv('HCB_MCP_URL', HCB_MCP_URL);
 
-  // Prefer the per-request token (sent from the UI), but fall back to the env var.
-  const tokenToUse = (hcb_token && hcb_token.trim()) || HCB_MCP_TOKEN;
+  const tokenToUse = (hcb_token && hcb_token.trim()) || (HCB_MCP_TOKEN && HCB_MCP_TOKEN.trim());
 
   const res = await fetch(HCB_MCP_URL!, {
     method: 'POST',
@@ -58,11 +57,20 @@ export async function POST(req: NextRequest) {
   const hcb_token = (body.hcb_token || '').trim() || undefined;
 
   try {
+    const tokenUsed = (hcb_token && hcb_token.trim()) || HCB_MCP_TOKEN || undefined;
     const answer = await callMcp(message, hcb_token);
-    return NextResponse.json({ answer });
+    return NextResponse.json({ answer, auth: { tokenUsedPresent: !!tokenUsed } });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unknown error';
-    return NextResponse.json({ answer: `Error: ${msg}` }, { status: 200 });
+    return NextResponse.json(
+      {
+        answer: `Error: ${msg}`,
+        auth: {
+          tokenUsedPresent: !!((hcb_token && hcb_token.trim()) || HCB_MCP_TOKEN)
+        }
+      },
+      { status: 200 }
+    );
   }
 }
 
