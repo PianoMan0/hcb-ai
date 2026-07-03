@@ -5,6 +5,7 @@ const HCB_MCP_TOKEN = process.env.HCB_MCP_TOKEN; // optional; depends on MCP aut
 
 type Body = {
   message: string;
+  hcb_token?: string;
 };
 
 function mustEnv(name: string, value: string | undefined) {
@@ -12,7 +13,7 @@ function mustEnv(name: string, value: string | undefined) {
   return value;
 }
 
-async function callMcp(message: string): Promise<string> {
+async function callMcp(message: string, hcb_token?: string): Promise<string> {
   mustEnv('HCB_MCP_URL', HCB_MCP_URL);
 
   const res = await fetch(HCB_MCP_URL!, {
@@ -51,8 +52,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing message' }, { status: 400 });
   }
 
+  const hcb_token = (body.hcb_token || '').trim() || undefined;
+
   try {
-    const answer = await callMcp(message);
+    const answer = await callMcp(message, hcb_token);
     return NextResponse.json({ answer });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unknown error';
